@@ -51,9 +51,9 @@ impl Sock {
 
             let nonce = utils::random_nonce();
 
-            println!("{}, {}, {}", &encrypted, &self.key, &sent_nonce);
-
             let decrypted =  crypt::decrypt(&encrypted, &self.key, &sent_nonce);
+
+            println!("{}", decrypted);
             
             self.send(&crypt::encrypt(&decrypted, &self.key, &nonce), &nonce);
         }

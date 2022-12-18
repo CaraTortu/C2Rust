@@ -1,8 +1,6 @@
 import socket, base64, utils
 
-from cryptography.hazmat.primitives.ciphers import (
-    Cipher, algorithms, modes
-)
+from Crypto.Cipher import AES
 
 class Connection:
     def __init__(self, conn: socket.socket) -> None:
@@ -12,17 +10,23 @@ class Connection:
 
     def send_command(self, cmd: str) -> None:
         self.conn.send(cmd)
+    
+    def pad(self, s: str):
+        block_size = 16
+        remainder = len(s) % block_size
+        padding_needed = block_size - remainder
+        return s.encode() + (padding_needed * b'\x08')
 
-    def encrypt(self, msg: str, nonce: bytes) -> bytes:
-        encryptor = Cipher(algorithms.AES256(self.key), modes.CBC(nonce)).encryptor()
-        ciphertext = encryptor.update(msg.encode()) + encryptor.finalize()
+    def encrypt(self, msg: str, iv: bytes):
+        padded_text = self.pad(msg)
+        cipher_config = AES.new(self.key, AES.MODE_CBC, iv)    
+        ciper = cipher_config.encrypt(padded_text)
+        return base64.b64encode(ciper)
 
-        return base64.b64encode(ciphertext)
-
-    def decrypt(self, msg: bytes, nonce: bytes) -> str:
+    def decrypt(self, msg: str, iv: bytes) -> str:
         msg = base64.b64decode(msg)
-        decryptor = Cipher(algorithms.AES256(self.key), modes.CBC(nonce)).decryptor()
-        return decryptor.update(msg)
+        cipher = AES.new(self.key, AES.MODE_CBC, iv)
+        return cipher.decrypt(msg).decode()
 
     def listen(self) -> None:
         print("Key:", self.key.decode())
@@ -37,6 +41,6 @@ class Connection:
 
             self.send_command(enc + b"|" + nonce + b"\n")
 
-            msg = self.conn.recv(1024)
+            msg, nonce = self.conn.recv(1024).decode().split("|")
 
-            print("Message: " + msg.decode())
+            print("Message: " + self.decrypt(msg, nonce.encode()))

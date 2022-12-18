@@ -1,14 +1,19 @@
 mod lib;
 
-use self::lib::crypt;
+use self::lib::{utils, net};
 
 fn main() {
-    let msg = "Hello there!".to_owned();
-    let key = "KnGDmdXEaZDwBnhPYxBUytcjrgDfbvat".to_owned();
-    let nonce = "ABCDEFGHIJKL".to_owned();
-    let enc = crypt::encrypt(&msg, &key, &nonce);
-    println!("{}", &enc);
+    let key = utils::random_key();
 
-    let dec = crypt::decrypt(&enc, &key, &nonce);
-    println!("{}", dec);
+    // Connect to socket
+    let mut socket = net::Sock {
+        stream: net::connect(&"127.0.0.1".to_owned(), &"1234".to_owned()),
+        key: key
+    }; 
+
+    // Manage our connection
+    socket.manage();
+
+    // Close the socket
+    socket.close()
 }

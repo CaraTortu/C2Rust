@@ -1,26 +1,21 @@
-use aes_gcm::{
-    aead::{Aead, KeyInit, generic_array::GenericArray},
-    Aes256Gcm, Nonce
-};
-use base64;
+use openssl::{base64, symm};
 use std::str;
 
 pub fn encrypt(msg: &String, key: &String, nonce: &String) -> String {
-    let cipher = Aes256Gcm::new(&GenericArray::from_slice(key.as_ref()));
-    let nonce = Nonce::from_slice(nonce.as_bytes()); 
+    let cipher = symm::Cipher::aes_256_cbc();
+    let iv = nonce.as_bytes(); 
 
-    let ciphertext = cipher.encrypt(nonce, msg.as_ref()).unwrap();
+    let ciphertext = symm::encrypt(cipher, key.as_bytes(), Some(iv), msg.as_bytes()).unwrap();
 
-    return base64::encode(&ciphertext);
+    return base64::encode_block(&ciphertext);
 }
 
 pub fn decrypt(msg: &String, key: &String, nonce: &String) -> String {
-    let cipher = Aes256Gcm::new(&GenericArray::from_slice(key.as_ref()));
-    let nonce = Nonce::from_slice(nonce.as_bytes()); 
+    let cipher = symm::Cipher::aes_256_cbc();
+    let iv = nonce.as_bytes(); 
+    let decoded_b64 = base64::decode_block(msg).unwrap();
 
-    let plaintext = cipher.decrypt(nonce, base64::decode(msg).unwrap().as_slice()).expect("Error on decryption");
+    let plaintext = symm::decrypt(cipher, key.as_bytes(), Some(iv), &decoded_b64).expect("Error on decryption");
 
     return str::from_utf8(&plaintext).unwrap().to_owned();
 }
-
-

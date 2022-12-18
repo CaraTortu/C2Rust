@@ -12,10 +12,13 @@ class Connection:
         self.conn.send(cmd)
     
     def pad(self, s: str):
-        block_size = 16
-        remainder = len(s) % block_size
-        padding_needed = block_size - remainder
-        return s.encode() + (padding_needed * b'\x08')
+        remainder = (len(s) // 16) * 16
+
+        if remainder == 0:
+            remainder = 16 - len(s)
+        else:
+            remainder = (remainder*2) - len(s)
+        return s.encode() + (remainder * b'\x08')
 
     def encrypt(self, msg: str, iv: bytes):
         padded_text = self.pad(msg)
@@ -34,10 +37,8 @@ class Connection:
         while True:
             x = input("$ ")
             nonce = utils.getRandomString(16).encode()
-            print("Nonce: " + nonce.decode())
-            enc = self.encrypt(x, nonce)
 
-            print("enc:", enc)
+            enc = self.encrypt(x, nonce)
 
             self.send_command(enc + b"|" + nonce + b"\n")
 

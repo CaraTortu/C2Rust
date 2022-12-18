@@ -48,15 +48,20 @@ impl Sock {
 
             let encrypted = values[0].to_owned();
             let sent_nonce = values[1].to_owned();
-
-            let nonce = utils::random_nonce();
-
-            let decrypted =  crypt::decrypt(&encrypted, &self.key, &sent_nonce);
-
-            println!("{}", decrypted);
             
-            self.send(&crypt::encrypt(&decrypted, &self.key, &nonce), &nonce);
+            let decrypted =  crypt::decrypt(&encrypted, &self.key, &sent_nonce);
+            
+            println!("Command: {}", decrypted);
+
+            self.manage_command(decrypted);
+            
+            let nonce = utils::random_nonce();
+            self.send(&crypt::encrypt(&"Received!".to_owned(), &self.key, &nonce), &nonce);
         }
+    }
+
+    fn manage_command(&mut self, cmd: String) {
+
     }
     
 }

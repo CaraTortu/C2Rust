@@ -12,12 +12,13 @@ class Connection:
         self.conn.send(cmd)
     
     def pad(self, s: str):
-        remainder = (len(s) // 16) * 16
+        l = len(s)
 
-        if remainder == 0:
-            remainder = 16 - len(s)
-        else:
-            remainder = (remainder*2) - len(s)
+        remainder = l // 16
+
+        if remainder == 0: remainder = 16 - l
+        else: remainder = (remainder*32) - l
+
         return s.encode() + (remainder * b'\x08')
 
     def encrypt(self, msg: str, iv: bytes):

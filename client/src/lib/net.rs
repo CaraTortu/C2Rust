@@ -2,7 +2,7 @@ use std::io::prelude::*;
 use std::net::{TcpStream, Shutdown};
 use std::io::BufReader;
 
-use super::{utils, crypt};
+use super::{utils, crypt, dir};
 
 pub struct Sock {
     pub stream: TcpStream,
@@ -29,6 +29,7 @@ impl Sock {
     }
     
     pub fn send(&mut self, msg: &String, nonce: &String) {
+        let msg = &crypt::encrypt(msg, &self.key, &nonce);
         self.stream.write(format!("{msg}|{nonce}").as_bytes()).unwrap();
     }
 
@@ -54,14 +55,24 @@ impl Sock {
             println!("Command: {}", decrypted);
 
             self.manage_command(decrypted);
-            
-            let nonce = utils::random_nonce();
-            self.send(&crypt::encrypt(&"Received!".to_owned(), &self.key, &nonce), &nonce);
         }
     }
 
     fn manage_command(&mut self, cmd: String) {
+        let split: Vec<&str> = cmd.split(":").collect();
 
+        let command = split[0];
+        let value = &split[1].replace("\x08", "");
+
+        match command {
+            "ls" => self.get_directories(value),
+            _ => self.send(&"Invalid Command".to_owned(), &utils::random_nonce())
+        }
+    }
+
+    fn get_directories(&mut self, path: &str) {
+        let directories = &dir::files_in_path(path);
+        self.send(directories, &utils::random_nonce());
     }
     
 }

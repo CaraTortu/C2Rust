@@ -30,7 +30,7 @@ class Connection:
     def decrypt(self, msg: str, iv: bytes) -> str:
         msg = base64.b64decode(msg)
         cipher = AES.new(self.key, AES.MODE_CBC, iv)
-        return cipher.decrypt(msg).decode()
+        return utils.filter(cipher.decrypt(msg).decode())
 
     def listen(self) -> None:
         print("Key:", self.key.decode())

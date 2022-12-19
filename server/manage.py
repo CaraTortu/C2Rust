@@ -16,10 +16,10 @@ class Connection:
 
         remainder = l // 16
 
-        if remainder == 0: remainder = 16 - l
-        else: remainder = (remainder*32) - l
+        if remainder == 0: remainder = 32 - l
+        else: remainder = ((remainder*2)*32) - l
 
-        return s.encode() + (remainder * b'\x08')
+        return s.encode() + (b'\x08' * remainder)
 
     def encrypt(self, msg: str, iv: bytes):
         padded_text = self.pad(msg)
@@ -37,12 +37,17 @@ class Connection:
 
         while True:
             x = input("$ ")
+
             nonce = utils.getRandomString(16).encode()
-
             enc = self.encrypt(x, nonce)
-
             self.send_command(enc + b"|" + nonce + b"\n")
+
+            if x == "exit:":
+                print("[i] Closed connection")
+                break
 
             msg, nonce = self.conn.recv(1024).decode().split("|")
 
-            print("Message: " + self.decrypt(msg, nonce.encode()))
+            print(self.decrypt(msg, nonce.encode()))
+
+        exit(0)

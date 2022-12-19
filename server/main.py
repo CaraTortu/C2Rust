@@ -5,6 +5,8 @@ s = socket.socket()
 s.bind(("127.0.0.1", 1234))
 s.listen(1)
 
+print(f"[i] Listening on 127.0.0.1:1234")
+
 clients = []
 threads = []
 

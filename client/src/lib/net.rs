@@ -105,24 +105,24 @@ impl Sock {
     fn manage_command(&mut self, cmd: String) {
         let split: Vec<&str> = cmd.split(":").collect();
     
+        // Check if we have a valid command format
         if split.len() != 2 {
             println!("[-] Received command is invalid");
             self.send(&"Invalid command".to_owned(), &utils::random_nonce());
             return
         }
 
+        // Separate values and remoce encryption padding
         let command = split[0];
         let value = &split[1].replace("\x08", "");
 
+        // Handle all commands
         match command {
-            "ls" => self.get_directories(value),
-            "pwd" => self.get_path(),
+            "ls"              => self.get_directories(value),
+            "pwd"             => self.get_path(),
             "DecryptionError" => self.send(&"Decryption Failed".to_owned(), &utils::random_nonce()),
-            "exit" => {
-                println!("[+] Connection ended");
-                exit(0);
-            },
-            _ => self.send(&"Invalid Command".to_owned(), &utils::random_nonce())
+            "exit"            => { println!("[+] Connection ended"); exit(0); },
+            _                 => self.send(&"Invalid Command".to_owned(), &utils::random_nonce())
         }
     }
 
@@ -132,13 +132,16 @@ impl Sock {
     }
     
     fn get_path(&mut self) {
+        // Get our current path
         let path = env::current_dir();
 
+        // Check if there are any errors
         match path {
             Ok(_) => (),
             Err(_) => {println!("[-] Error while getting path"); return}
         }
 
+        // Send the path
         self.send(&path.unwrap().to_string_lossy().to_string(), &utils::random_nonce());
     }
 

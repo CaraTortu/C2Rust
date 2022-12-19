@@ -1,5 +1,5 @@
 import socket, threading
-from manage import Connection
+from lib.manage import Connection
 
 s = socket.socket()
 s.bind(("127.0.0.1", 1234))

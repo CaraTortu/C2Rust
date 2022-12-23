@@ -1,4 +1,4 @@
-import socket, re
+import socket
 
 import lib.utils as utils
 import lib.crypt as crypt

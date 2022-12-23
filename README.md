@@ -1,6 +1,6 @@
 # Rust Reverse Shell
 
-This is a reverse shell that is undetectable by all antivirus (Tested on 23/12/2022). All traffic and output is end-to-end encrypted using AES256
+This is a reverse shell that is undetectable by all antivirus (Tested on 23/12/2022 https://www.virustotal.com/gui/file/db1186abdd073aaf537273a5642e61cfcab55c1d70cb034437ff304a282b4e39). All traffic and output is end-to-end encrypted using AES256
 
 Edit the main.rs file to include the ip and port you want to connect to. After this, compile using the following code.
 

